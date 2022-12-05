@@ -115,6 +115,32 @@ def read_image(path):
     return img
 
 
+def resize_image_cv2(img):
+    """Resize image and make it fit for network.
+
+    Args:
+        img (array): image
+
+    Returns:
+        tensor: data ready for network
+    """
+    height_orig = img.shape[0]
+    width_orig = img.shape[1]
+    unit_scale = 384.
+
+    if width_orig > height_orig:
+        scale = width_orig / unit_scale
+    else:
+        scale = height_orig / unit_scale
+
+    height = (np.ceil(height_orig / scale / 32) * 32).astype(int)
+    width = (np.ceil(width_orig / scale / 32) * 32).astype(int)
+
+    return cv2.resize(img, (width, height), interpolation=cv2.INTER_AREA)
+    
+
+   
+
 def resize_image(img):
     """Resize image and make it fit for network.
 
@@ -157,13 +183,31 @@ def resize_depth(depth, width, height):
     Returns:
         array: processed depth
     """
-    depth = torch.squeeze(depth[0, :, :, :]).to("cpu")
-    depth = cv2.blur(depth.numpy(), (3, 3))
+    depth = torch.squeeze(depth[0, :, :, :]).to("cpu").numpy().astype(np.float32)
+
+    depth = cv2.blur(depth, (3, 3))
     depth_resized = cv2.resize(
         depth, (width, height), interpolation=cv2.INTER_AREA
     )
 
     return depth_resized
+
+def resize_depth_none(depth):
+    """Resize depth map and bring to CPU (numpy).
+
+    Args:
+        depth (tensor): depth
+        width (int): image width
+        height (int): image height
+
+    Returns:
+        array: processed depth
+    """
+    return torch.squeeze(depth[0, :, :, :]).to("cpu").numpy().astype(np.float32)
+
+    
+
+    
 
 def write_depth(path, depth, bits=1):
     """Write depth map to pfm and png file.

@@ -11,7 +11,7 @@ BOOST_BASE = 'BoostingMonocularDepth'
 BOOST_INPUTS = 'inputs'
 BOOST_OUTPUTS = 'outputs'
 
-def run_boostmonodepth(img_names, src_folder, depth_folder):
+def run_boostmonodepth(img_names, src_folder, depth_folder,algo=2):
 
     if not isinstance(img_names, list):
         img_names = [img_names]
@@ -41,18 +41,19 @@ def run_boostmonodepth(img_names, src_folder, depth_folder):
         H, W = img.shape[:2]
         scale = 640. / max(H, W)
 
-        # invert grayscale
-        image = cv2.imread(os.path.join(BOOST_BASE, BOOST_OUTPUTS, tgt_name), 0)
-        inverted = np.invert(image)
-        from PIL import Image
-        im = Image.fromarray(inverted)
-        im.save(os.path.join(BOOST_BASE, BOOST_OUTPUTS, tgt_name))
+        # # invert grayscale
+        # image = cv2.imread(os.path.join(BOOST_BASE, BOOST_OUTPUTS, tgt_name), 0)
+        # inverted = np.invert(image)
+        # from PIL import Image
+        # im = Image.fromarray(inverted)
+        # im.save(os.path.join(BOOST_BASE, BOOST_OUTPUTS, tgt_name))
         
         # resize and save depth
         target_height, target_width = int(round(H * scale)), int(round(W * scale))
-        depth = inverted
+        #depth = inverted
+        depth = imageio.imread(os.path.join(BOOST_BASE, BOOST_OUTPUTS, tgt_name))
         depth = np.array(depth).astype(np.float32)
-        depth = resize_depth(depth, target_width, target_height)
+        depth=65535.0-depth
         np.save(os.path.join(depth_folder, tgt_name.replace('.png', '.npy')), depth / 32768. - 1.)
         write_depth(os.path.join(depth_folder, tgt_name.replace('.png', '')), depth)
 
